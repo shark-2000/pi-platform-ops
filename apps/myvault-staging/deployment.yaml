@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myvault
+  namespace: myvault-staging
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: myvault
+  template:
+    metadata:
+      labels:
+        app: myvault
+    spec:
+      imagePullSecrets:
+        - name: ghcr-auth
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: myvault
+          image: ghcr.io/shark-2000/myvault@sha256:205b686cd4b4ce73574825fb0ef387392c8a3fa348b6d19bcddf012e78c639a5
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: TZ
+              value: Asia/Kolkata
+            - name: PISTREAM_MEDIA_PATH
+              value: /downloads/complete
+          startupProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: http
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+            - name: vault-data
+              mountPath: /vault-data
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: myvault-config
+        - name: downloads
+          persistentVolumeClaim:
+            claimName: myvault-downloads
+        - name: vault-data
+          persistentVolumeClaim:
+            claimName: myvault-data
