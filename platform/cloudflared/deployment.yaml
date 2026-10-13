@@ -19,6 +19,11 @@ spec:
         runAsUser: 65532
         seccompProfile:
           type: RuntimeDefault
+      volumes:
+        - name: argocd-origin-ca
+          configMap:
+            name: argocd-origin-ca
+            optional: true
       containers:
         - name: cloudflared
           image: cloudflare/cloudflared:2026.9.0
@@ -34,6 +39,10 @@ spec:
                 secretKeyRef:
                   name: cloudflare-tunnel-token
                   key: token
+          volumeMounts:
+            - name: argocd-origin-ca
+              mountPath: /etc/cloudflared/certs
+              readOnly: true
           ports:
             - name: metrics
               containerPort: 2000
