@@ -1,0 +1,47 @@
+name: Demo API - ARM64 CI
+on:
+  pull_request:
+    paths:
+      - 'services/demo-api/**'
+      - '.github/workflows/demo-api-ci.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'services/demo-api/**'
+      - '.github/workflows/demo-api-ci.yaml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: services/demo-api/requirements-dev.txt
+      - name: Unit tests
+        working-directory: services/demo-api
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pytest -q
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build ARM64 container
+        uses: docker/build-push-action@v6
+        with:
+          context: services/demo-api
+          platforms: linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/shark-2000/pi-demo-api:sha-${{ github.sha }}
+          provenance: true
