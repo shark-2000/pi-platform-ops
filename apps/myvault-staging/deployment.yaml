@@ -20,7 +20,7 @@ spec:
       terminationGracePeriodSeconds: 90
       containers:
         - name: myvault
-          image: ghcr.io/shark-2000/myvault@sha256:205b686cd4b4ce73574825fb0ef387392c8a3fa348b6d19bcddf012e78c639a5
+          image: ghcr.io/shark-2000/myvault@sha256:2d1a453792fe308c98feb0f5b3e7d082405ddbc3738a20a92ad1e84386c895b3
           imagePullPolicy: Always
           ports:
             - name: http
