@@ -1,4 +1,4 @@
-name: Demo API - ARM64 CI
+name: Demo API - ARM64 CI and GitOps promotion
 on:
   pull_request:
     paths:
@@ -10,12 +10,17 @@ on:
       - 'services/demo-api/**'
       - '.github/workflows/demo-api-ci.yaml'
   workflow_dispatch:
+
 permissions:
   contents: read
-  packages: write
+
 jobs:
-  test-and-build:
+  test-build-promote:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -38,6 +43,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build ARM64 container
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: services/demo-api
@@ -45,3 +51,39 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/shark-2000/pi-demo-api:sha-${{ github.sha }}
           provenance: true
+      - name: Promote immutable image digest in GitOps manifests
+        if: github.event_name != 'pull_request'
+        env:
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          python - <<'PY'
+          import os
+          import pathlib
+          import re
+          path = pathlib.Path("apps/demo-api/deployment.yaml")
+          text = path.read_text()
+          image = "ghcr.io/shark-2000/pi-demo-api@" + os.environ["IMAGE_DIGEST"]
+          new, count = re.subn(
+              r"(?m)^(\s*image:)\s+ghcr\.io/shark-2000/pi-demo-api(?:[:@][^\s]+)\s*$",
+              lambda m: m.group(1) + " " + image,
+              text,
+          )
+          if count != 1:
+              raise SystemExit(f"Expected exactly one demo-api image, found {count}")
+          path.write_text(new)
+          print(f"Prepared immutable image: {image}")
+          PY
+      - name: Open GitOps promotion pull request
+        if: github.event_name != 'pull_request'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: automation/demo-api-image
+          delete-branch: true
+          commit-message: "chore(gitops): promote demo-api image"
+          title: "chore(gitops): promote demo-api ARM64 image"
+          body: |
+            Built and tested by GitHub Actions.
+            This PR pins the Kubernetes image to the immutable GHCR digest.
+            Review and merge to let Argo CD deploy it.
+          add-paths: apps/demo-api/deployment.yaml
