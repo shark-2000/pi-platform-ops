@@ -20,7 +20,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api
-          image: ghcr.io/shark-2000/pi-demo-api:sha-8d48a2b01696b69fe37c73229eda4973fbdd367b
+          image: ghcr.io/shark-2000/pi-demo-api@sha256:9e59dec16209e0dcb9b70c2e6b6b6d55cfdb17a45270f8908cc3c2f68f87fae1
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
