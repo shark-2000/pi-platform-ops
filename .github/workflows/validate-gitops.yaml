@@ -1,0 +1,24 @@
+name: Validate GitOps manifests
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.36.0
+      - name: Render Kustomize manifests
+        run: kubectl kustomize apps/hello-pi > /tmp/hello-pi.yaml
+      - name: Assert expected resources
+        run: |
+          grep -q 'kind: Deployment' /tmp/hello-pi.yaml
+          grep -q 'kind: Service' /tmp/hello-pi.yaml
+          grep -q 'namespace: apps-dev' /tmp/hello-pi.yaml
