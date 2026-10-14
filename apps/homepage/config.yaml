@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-config
+data:
+  settings.yaml: |
+    title: Pi 500+ Homelab
+    theme: dark
+    color: slate
+  services.yaml: |
+    - Platform:
+        - Argo CD:
+            href: https://argocd.aquavault.ai
+            description: GitOps application management
+        - MyVault staging:
+            href: http://myvault.myvault-staging.svc.cluster.local:8080
+            description: Internal-only staging (use SSH tunnel)
+    - Operations:
+        - Uptime Kuma:
+            href: http://uptime-kuma.uptime-kuma.svc.cluster.local:3001
+            description: Internal-only uptime checks
+  widgets.yaml: |
+    - resources:
+        cpu: true
+        memory: true
+  bookmarks.yaml: |
+    - Engineering:
+        - GitOps repository:
+            - href: https://github.com/shark-2000/pi-platform-ops
