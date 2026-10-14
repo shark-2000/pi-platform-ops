@@ -24,7 +24,7 @@ spec:
               containerPort: 3000
           env:
             - name: HOMEPAGE_ALLOWED_HOSTS
-              value: "localhost:3000,127.0.0.1:3000,homepage.homepage.svc.cluster.local:3000"
+              value: "localhost:13000,127.0.0.1:13000,localhost:3000,127.0.0.1:3000,homepage.homepage.svc.cluster.local:3000"
           volumeMounts:
             - name: config
               mountPath: /app/config/settings.yaml
