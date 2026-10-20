@@ -12,9 +12,6 @@ data:
         - Argo CD:
             href: https://argocd.aquavault.ai
             description: GitOps application management
-        - MyVault staging:
-            href: http://myvault.myvault-staging.svc.cluster.local:8080
-            description: Internal-only staging (use SSH tunnel)
     - Operations:
         - Uptime Kuma:
             href: http://uptime-kuma.uptime-kuma.svc.cluster.local:3001
